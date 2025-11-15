@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { getProducts, getProductsByCategory, getCategories } from '../services/fakeStoreApi';
 import ProductCard from '../components/ProductCard';
-import { FiFilter, FiX, FiStar } from 'react-icons/fi';
+import { FiFilter, FiX, FiStar, FiSearch } from 'react-icons/fi';
 
 const Products = () => {
   const [allProducts, setAllProducts] = useState([]);
@@ -32,55 +32,44 @@ const Products = () => {
   }, []);
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
-        const data = await getCategories();
-        setCategories(data);
+        const [categoriesData, productsData] = await Promise.all([
+          getCategories(),
+          getProducts()
+        ]);
+        setCategories(categoriesData);
+        setAllProducts(productsData);
+        
+        // Calculate price range
+        if (productsData.length > 0) {
+          const prices = productsData.map(p => p.price);
+          const min = Math.floor(Math.min(...prices));
+          const max = Math.ceil(Math.max(...prices));
+          setMinPrice(min);
+          setMaxPrice(max);
+          setPriceRange([min, max]);
+        }
+        
+        setLoading(false);
       } catch (error) {
-        console.error('Error fetching categories:', error);
+        console.error('Error fetching data:', error);
+        setLoading(false);
       }
     };
-    fetchCategories();
+    fetchData();
   }, []);
 
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoading(true);
-        let data;
-        if (category) {
-          data = await getProductsByCategory(category);
-        } else {
-          data = await getProducts();
-        }
-        setAllProducts(data);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching products:', error);
-        setLoading(false);
-      }
-    };
-    fetchProducts();
-  }, [category]);
-
-  useEffect(() => {
-    // Calculate price range from all products
-    if (allProducts.length > 0) {
-      const prices = allProducts.map(p => p.price);
-      const min = Math.floor(Math.min(...prices));
-      const max = Math.ceil(Math.max(...prices));
-      setMinPrice(min);
-      setMaxPrice(max);
-      setPriceRange([min, max]);
-    }
-  }, [allProducts]);
-
-  useEffect(() => {
-    // Apply all filters
     let filtered = [...allProducts];
 
+    // Category filter
+    if (category) {
+      filtered = filtered.filter(product => product.category === category);
+    }
+
     // Search filter
-    if (search) {
+    if (search.trim()) {
       filtered = filtered.filter(product =>
         product.title.toLowerCase().includes(search.toLowerCase()) ||
         product.description.toLowerCase().includes(search.toLowerCase())
@@ -116,541 +105,516 @@ const Products = () => {
     }
 
     setProducts(filtered);
-  }, [search, priceRange, rating, sortBy, allProducts]);
+  }, [search, category, priceRange, rating, sortBy, allProducts]);
 
-  const handlePriceRangeChange = (index, value) => {
-    const newRange = [...priceRange];
-    newRange[index] = parseFloat(value);
-    
-    // Ensure min doesn't exceed max and vice versa
-    if (index === 0 && newRange[0] > newRange[1]) {
-      newRange[0] = newRange[1];
-    }
-    if (index === 1 && newRange[1] < newRange[0]) {
-      newRange[1] = newRange[0];
-    }
-    
-    setPriceRange(newRange);
-  };
-
-  const resetFilters = () => {
-    setSearch('');
-    setCategory('');
-    setRating(0);
-    setSortBy('default');
-    if (allProducts.length > 0) {
-      const prices = allProducts.map(p => p.price);
-      const min = Math.floor(Math.min(...prices));
-      const max = Math.ceil(Math.max(...prices));
-      setPriceRange([min, max]);
-    }
-  };
-
-  const FilterSidebar = () => (
-    <div style={{
-      background: 'var(--bg-card)',
-      border: '1px solid var(--border-color)',
-      borderRadius: '16px',
-      padding: '24px',
-      marginBottom: isMobile ? '20px' : 0,
-      position: isMobile ? 'fixed' : 'sticky',
-      top: isMobile ? 0 : '100px',
-      maxHeight: isMobile ? '100vh' : 'calc(100vh - 120px)',
-      overflowY: 'auto',
-      zIndex: isMobile ? 1000 : 1,
-      width: isMobile ? '100%' : '280px',
-      left: isMobile ? 0 : 'auto',
-      right: isMobile ? 0 : 'auto',
-      animation: isMobile ? 'slideIn 0.3s ease-out' : 'none'
-    }}>
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: '24px'
-      }}>
-        <h3 style={{ color: 'var(--text-primary)', fontSize: '20px', fontWeight: '600' }}>
-          Filter Produk
-        </h3>
-        {isMobile && (
-          <button
-            onClick={() => setShowFilter(false)}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--text-primary)',
-              fontSize: '24px',
-              cursor: 'pointer',
-              padding: '4px'
-            }}
-          >
-            <FiX />
-          </button>
-        )}
-      </div>
-
-      {/* Price Range */}
-      <div style={{ marginBottom: '24px' }}>
-        <label style={{
-          display: 'block',
-          color: 'var(--text-primary)',
-          fontWeight: '500',
-          marginBottom: '16px',
-          fontSize: '16px'
-        }}>
-          Range Harga
-        </label>
-        
-        {/* Min Price Slider */}
-        <div style={{ marginBottom: '24px' }}>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '8px'
-          }}>
-            <label style={{
-              color: 'var(--text-secondary)',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}>
-              Harga Minimum
-            </label>
-            <span style={{
-              color: 'var(--text-primary)',
-              fontSize: '16px',
-              fontWeight: '600',
-              minWidth: '80px',
-              textAlign: 'right'
-            }}>
-              ${priceRange[0].toFixed(2)}
-            </span>
-          </div>
-          <input
-            type="range"
-            min={minPrice}
-            max={priceRange[1]}
-            step="0.01"
-            value={priceRange[0]}
-            onChange={(e) => {
-              const val = parseFloat(e.target.value);
-              if (val <= priceRange[1]) {
-                setPriceRange([val, priceRange[1]]);
-              }
-            }}
-            className="price-slider price-slider-min"
-            style={{
-              width: '100%',
-              height: '8px',
-              cursor: 'pointer'
-            }}
-          />
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginTop: '4px',
-            fontSize: '12px',
-            color: 'var(--text-muted)'
-          }}>
-            <span>${minPrice.toFixed(2)}</span>
-            <span>${priceRange[1].toFixed(2)}</span>
-          </div>
-        </div>
-
-        {/* Max Price Slider */}
-        <div>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '8px'
-          }}>
-            <label style={{
-              color: 'var(--text-secondary)',
-              fontSize: '14px',
-              fontWeight: '500'
-            }}>
-              Harga Maksimum
-            </label>
-            <span style={{
-              color: 'var(--text-primary)',
-              fontSize: '16px',
-              fontWeight: '600',
-              minWidth: '80px',
-              textAlign: 'right'
-            }}>
-              ${priceRange[1].toFixed(2)}
-            </span>
-          </div>
-          <input
-            type="range"
-            min={priceRange[0]}
-            max={maxPrice}
-            step="0.01"
-            value={priceRange[1]}
-            onChange={(e) => {
-              const val = parseFloat(e.target.value);
-              if (val >= priceRange[0]) {
-                setPriceRange([priceRange[0], val]);
-              }
-            }}
-            className="price-slider price-slider-max"
-            style={{
-              width: '100%',
-              height: '8px',
-              cursor: 'pointer'
-            }}
-          />
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            marginTop: '4px',
-            fontSize: '12px',
-            color: 'var(--text-muted)'
-          }}>
-            <span>${priceRange[0].toFixed(2)}</span>
-            <span>${maxPrice.toFixed(2)}</span>
-          </div>
-        </div>
-
-        {/* Current Range Display */}
-        <div style={{
-          marginTop: '20px',
-          padding: '12px',
-          background: 'var(--bg-secondary)',
-          borderRadius: '8px',
-          border: '1px solid var(--border-color)',
-          textAlign: 'center'
-        }}>
-          <div style={{
-            fontSize: '12px',
-            color: 'var(--text-muted)',
-            marginBottom: '4px'
-          }}>
-            Range yang dipilih
-          </div>
-          <div style={{
-            fontSize: '18px',
-            fontWeight: '600',
-            color: 'var(--text-primary)'
-          }}>
-            ${priceRange[0].toFixed(2)} - ${priceRange[1].toFixed(2)}
-          </div>
-        </div>
-      </div>
-
-      {/* Category Filter */}
-      <div style={{ marginBottom: '24px' }}>
-        <label style={{
-          display: 'block',
-          color: 'var(--text-primary)',
-          fontWeight: '500',
-          marginBottom: '12px',
-          fontSize: '16px'
-        }}>
-          Kategori
-        </label>
-        <div style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
-          maxHeight: '200px',
-          overflowY: 'auto'
-        }}>
-          <label style={{
-            display: 'flex',
-            alignItems: 'center',
-            cursor: 'pointer',
-            padding: '8px',
-            borderRadius: '8px',
-            transition: 'background 0.2s',
-            color: 'var(--text-secondary)'
-          }}
-          onMouseEnter={(e) => e.target.style.background = 'var(--bg-secondary)'}
-          onMouseLeave={(e) => e.target.style.background = 'transparent'}
-          >
-            <input
-              type="radio"
-              name="category"
-              value=""
-              checked={category === ''}
-              onChange={(e) => setCategory(e.target.value)}
-              style={{ marginRight: '8px', cursor: 'pointer' }}
-            />
-            Semua Kategori
-          </label>
-          {categories.map(cat => (
-            <label
-              key={cat}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                cursor: 'pointer',
-                padding: '8px',
-                borderRadius: '8px',
-                transition: 'background 0.2s',
-                color: 'var(--text-secondary)'
-              }}
-              onMouseEnter={(e) => e.target.style.background = 'var(--bg-secondary)'}
-              onMouseLeave={(e) => e.target.style.background = 'transparent'}
-            >
-              <input
-                type="radio"
-                name="category"
-                value={cat}
-                checked={category === cat}
-                onChange={(e) => setCategory(e.target.value)}
-                style={{ marginRight: '8px', cursor: 'pointer' }}
-              />
-              {cat.charAt(0).toUpperCase() + cat.slice(1)}
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Rating Filter */}
-      <div style={{ marginBottom: '24px' }}>
-        <label style={{
-          display: 'block',
-          color: 'var(--text-primary)',
-          fontWeight: '500',
-          marginBottom: '12px',
-          fontSize: '16px'
-        }}>
-          Rating Minimum
-        </label>
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          flexWrap: 'wrap'
-        }}>
-          {[1, 2, 3, 4, 5].map((starValue) => (
-            <button
-              key={starValue}
-              onClick={() => {
-                // Jika klik bintang yang sama, reset ke 0
-                if (rating === starValue) {
-                  setRating(0);
-                } else {
-                  setRating(starValue);
-                }
-              }}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                padding: '4px',
-                borderRadius: '8px',
-                display: 'flex',
-                alignItems: 'center',
-                transition: 'all 0.2s ease',
-                outline: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'var(--bg-secondary)';
-                e.currentTarget.style.transform = 'scale(1.1)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.transform = 'scale(1)';
-              }}
-              title={`Rating ${starValue} ke atas`}
-            >
-              <FiStar
-                style={{
-                  fontSize: '28px',
-                  color: starValue <= rating ? '#fbbf24' : 'var(--text-muted)',
-                  fill: starValue <= rating ? '#fbbf24' : 'transparent',
-                  strokeWidth: starValue <= rating ? 0 : 1.5,
-                  transition: 'all 0.2s ease',
-                  filter: starValue <= rating ? 'drop-shadow(0 2px 4px rgba(251, 191, 36, 0.4))' : 'none'
-                }}
-              />
-            </button>
-          ))}
-          {rating > 0 && (
-            <button
-              onClick={() => setRating(0)}
-              style={{
-                marginLeft: '8px',
-                padding: '6px 12px',
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '8px',
-                color: 'var(--text-secondary)',
-                fontSize: '12px',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                outline: 'none'
-              }}
-              onMouseEnter={(e) => {
-                e.target.style.background = 'var(--bg-tertiary)';
-                e.target.style.borderColor = 'var(--primary-color)';
-              }}
-              onMouseLeave={(e) => {
-                e.target.style.background = 'var(--bg-secondary)';
-                e.target.style.borderColor = 'var(--border-color)';
-              }}
-            >
-              Reset
-            </button>
-          )}
-        </div>
-        {rating > 0 && (
-          <div style={{
-            marginTop: '8px',
-            fontSize: '14px',
-            color: 'var(--text-secondary)'
-          }}>
-            Menampilkan produk dengan rating {rating} bintang ke atas
-          </div>
-        )}
-      </div>
-
-      {/* Reset Button */}
-      <button
-        onClick={resetFilters}
-        className="btn btn-outline"
-        style={{
-          width: '100%',
-          marginTop: '8px'
-        }}
-      >
-        Reset Filter
-      </button>
-    </div>
-  );
+  const isSmallMobile = window.innerWidth <= 480;
 
   return (
-    <div style={{ padding: isMobile ? '20px 15px' : '40px 20px', minHeight: '80vh' }}>
-      <div className="container">
-        {/* Header with Search and Filter Toggle */}
+    <div style={{ padding: window.innerWidth <= 768 ? '20px 15px' : '40px 20px', minHeight: '80vh', position: 'relative' }}>
+      <div className="container" style={{ maxWidth: '1400px' }}>
+        {/* Header */}
         <div style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
-          marginBottom: '24px',
+          marginBottom: isMobile ? '24px' : '32px',
           flexWrap: 'wrap',
-          gap: '15px'
+          gap: '16px'
         }}>
-          <h1 style={{
-            fontSize: isMobile ? '24px' : '36px',
+          <h1 style={{ 
+            fontSize: isSmallMobile ? '24px' : isMobile ? '28px' : '36px',
             color: 'var(--text-primary)',
             margin: 0
           }}>
             Semua Produk
+            {products.length > 0 && (
+              <span style={{
+                fontSize: '18px',
+                color: 'var(--text-muted)',
+                fontWeight: 'normal',
+                marginLeft: '12px'
+              }}>
+                ({products.length} produk)
+              </span>
+            )}
           </h1>
+          
+          {/* Mobile Filter Toggle */}
+          {isMobile && (
+            <button
+              onClick={() => setShowFilter(!showFilter)}
+              style={{
+                padding: '12px 20px',
+                background: 'var(--bg-card)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '12px',
+                color: 'var(--text-primary)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = 'var(--bg-card-hover)';
+                e.target.style.borderColor = 'var(--primary-color)';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = 'var(--bg-card)';
+                e.target.style.borderColor = 'var(--border-color)';
+              }}
+            >
+              <FiFilter />
+              <span>Filter</span>
+            </button>
+          )}
+        </div>
+
+        {/* Search and Sort Bar */}
+        <div style={{
+          display: 'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          gap: '16px',
+          marginBottom: '32px'
+        }}>
           <div style={{
-            display: 'flex',
-            gap: '12px',
-            alignItems: 'center',
-            width: isMobile ? '100%' : 'auto'
+            position: 'relative',
+            flex: 1
           }}>
+            <FiSearch style={{
+              position: 'absolute',
+              left: '16px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: 'var(--text-muted)',
+              fontSize: '20px'
+            }} />
             <input
               type="text"
               placeholder="Cari produk..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               style={{
-                flex: 1,
-                minWidth: isMobile ? '100%' : '250px',
-                padding: '12px 16px',
-                background: 'var(--bg-secondary)',
+                width: '100%',
+                padding: '14px 16px 14px 48px',
+                background: 'var(--bg-card)',
                 border: '1px solid var(--border-color)',
                 borderRadius: '12px',
                 color: 'var(--text-primary)',
-                fontSize: '14px'
+                fontSize: '16px',
+                outline: 'none',
+                transition: 'all 0.3s ease'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'var(--primary-color)';
+                e.target.style.boxShadow = '0 0 0 3px rgba(99, 102, 241, 0.1)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'var(--border-color)';
+                e.target.style.boxShadow = 'none';
               }}
             />
-            {isMobile && (
-              <button
-                onClick={() => setShowFilter(!showFilter)}
-                className="btn btn-primary"
-                style={{
-                  padding: '12px 16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px'
-                }}
-              >
-                <FiFilter />
-                Filter
-              </button>
-            )}
           </div>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value)}
+            style={{
+              padding: '14px 16px',
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '12px',
+              color: 'var(--text-primary)',
+              fontSize: '16px',
+              minWidth: isMobile ? '100%' : '200px',
+              cursor: 'pointer',
+              outline: 'none'
+            }}
+          >
+            <option value="default">Urutkan: Default</option>
+            <option value="price-low">Harga: Rendah ke Tinggi</option>
+            <option value="price-high">Harga: Tinggi ke Rendah</option>
+            <option value="rating">Rating Tertinggi</option>
+            <option value="name">Nama: A-Z</option>
+          </select>
         </div>
 
-        {/* Sort By */}
         <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          marginBottom: '24px',
-          flexWrap: 'wrap',
-          gap: '12px'
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '280px 1fr',
+          gap: '32px',
+          alignItems: 'start'
         }}>
+          {/* Filter Sidebar */}
           <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px'
-          }}>
-            <span style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>
-              Urutkan:
-            </span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              style={{
-                padding: '8px 12px',
-                background: 'var(--bg-secondary)',
-                border: '1px solid var(--border-color)',
-                borderRadius: '8px',
-                color: 'var(--text-primary)',
-                fontSize: '14px',
-                cursor: 'pointer'
-              }}
-            >
-              <option value="default">Default</option>
-              <option value="price-low">Harga: Rendah ke Tinggi</option>
-              <option value="price-high">Harga: Tinggi ke Rendah</option>
-              <option value="rating">Rating Tertinggi</option>
-              <option value="name">Nama A-Z</option>
-            </select>
-          </div>
-          <div style={{ color: 'var(--text-muted)', fontSize: '14px' }}>
-            {products.length} produk ditemukan
-          </div>
-        </div>
-
-        {/* Mobile Filter Overlay */}
-        {isMobile && showFilter && (
-          <div style={{
-            position: 'fixed',
-            top: 0,
+            display: isMobile && !showFilter ? 'none' : 'block',
+            position: isMobile ? 'fixed' : 'sticky',
+            top: isMobile ? '0' : '100px',
             left: 0,
             right: 0,
             bottom: 0,
-            background: 'rgba(0, 0, 0, 0.7)',
-            zIndex: 999,
-            animation: 'fadeIn 0.3s ease-out'
-          }} onClick={() => setShowFilter(false)} />
-        )}
+            zIndex: 1000,
+            background: isMobile ? 'rgba(10, 14, 39, 0.98)' : 'transparent',
+            backdropFilter: isMobile ? 'blur(20px)' : 'none',
+            padding: isMobile ? '20px' : '0',
+            overflowY: isMobile ? 'auto' : 'visible',
+            maxHeight: isMobile ? '100vh' : 'none'
+          }}>
+            {isMobile && (
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '24px',
+                paddingBottom: '16px',
+                borderBottom: '1px solid var(--border-color)'
+              }}>
+                <h2 style={{ fontSize: '20px', color: 'var(--text-primary)', margin: 0 }}>Filter</h2>
+                <button
+                  onClick={() => setShowFilter(false)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: 'var(--text-primary)',
+                    fontSize: '24px',
+                    cursor: 'pointer',
+                    padding: '4px'
+                  }}
+                >
+                  <FiX />
+                </button>
+              </div>
+            )}
+            
+            <div style={{
+              background: 'var(--bg-card)',
+              border: '1px solid var(--border-color)',
+              borderRadius: '16px',
+              padding: '24px',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.2)'
+            }}>
+              {/* Category Filter */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{
+                  display: 'block',
+                  color: 'var(--text-primary)',
+                  fontWeight: '600',
+                  marginBottom: '16px',
+                  fontSize: '16px'
+                }}>
+                  Kategori
+                </label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '12px 14px',
+                    borderRadius: '10px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    background: category === '' ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+                    border: category === '' ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid transparent'
+                  }}
+                  onMouseEnter={(e) => {
+                    if (category !== '') {
+                      e.currentTarget.style.background = 'var(--bg-card-hover)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (category !== '') {
+                      e.currentTarget.style.background = 'transparent';
+                    }
+                  }}
+                  >
+                    <input
+                      type="radio"
+                      name="category"
+                      value=""
+                      checked={category === ''}
+                      onChange={(e) => setCategory(e.target.value)}
+                      style={{
+                        cursor: 'pointer',
+                        width: '18px',
+                        height: '18px',
+                        accentColor: 'var(--primary-color)',
+                        margin: 0
+                      }}
+                    />
+                    <span style={{
+                      color: category === '' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                      fontWeight: category === '' ? '500' : '400',
+                      fontSize: '15px',
+                      userSelect: 'none'
+                    }}>
+                      Semua Kategori
+                    </span>
+                  </label>
+                  {categories.map(cat => (
+                    <label key={cat} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      padding: '12px 14px',
+                      borderRadius: '10px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      background: category === cat ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+                      border: category === cat ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid transparent'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (category !== cat) {
+                        e.currentTarget.style.background = 'var(--bg-card-hover)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (category !== cat) {
+                        e.currentTarget.style.background = 'transparent';
+                      }
+                    }}
+                    >
+                      <input
+                        type="radio"
+                        name="category"
+                        value={cat}
+                        checked={category === cat}
+                        onChange={(e) => setCategory(e.target.value)}
+                        style={{
+                          cursor: 'pointer',
+                          width: '18px',
+                          height: '18px',
+                          accentColor: 'var(--primary-color)',
+                          margin: 0
+                        }}
+                      />
+                      <span style={{
+                        color: category === cat ? 'var(--text-primary)' : 'var(--text-secondary)',
+                        fontWeight: category === cat ? '500' : '400',
+                        fontSize: '15px',
+                        userSelect: 'none'
+                      }}>
+                        {cat.charAt(0).toUpperCase() + cat.slice(1)}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
 
-        {/* Main Content */}
-        <div style={{
-          display: 'flex',
-          gap: '24px',
-          alignItems: 'flex-start'
-        }}>
-          {/* Desktop Filter Sidebar */}
-          {!isMobile && <FilterSidebar />}
+              {/* Price Range */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{
+                  display: 'block',
+                  color: 'var(--text-primary)',
+                  fontWeight: '600',
+                  marginBottom: '16px',
+                  fontSize: '16px'
+                }}>
+                  Range Harga
+                </label>
+                
+                {/* Min Price Slider */}
+                <div style={{ marginBottom: '24px' }}>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '8px'
+                  }}>
+                    <label style={{
+                      color: 'var(--text-secondary)',
+                      fontSize: '14px',
+                      fontWeight: '500'
+                    }}>
+                      Harga Minimum
+                    </label>
+                    <span style={{
+                      color: 'var(--text-primary)',
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      minWidth: '80px',
+                      textAlign: 'right'
+                    }}>
+                      ${priceRange[0].toFixed(2)}
+                    </span>
+                  </div>
+                  <input
+                    ref={minSliderRef}
+                    type="range"
+                    min={minPrice}
+                    max={priceRange[1]}
+                    step="0.01"
+                    value={priceRange[0]}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (val <= priceRange[1]) {
+                        setPriceRange([val, priceRange[1]]);
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '6px',
+                      borderRadius: '3px',
+                      background: 'var(--bg-tertiary)',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      zIndex: priceRange[0] > priceRange[1] - 10 ? 1 : 0
+                    }}
+                  />
+                </div>
+                
+                {/* Max Price Slider */}
+                <div>
+                  <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '8px'
+                  }}>
+                    <label style={{
+                      color: 'var(--text-secondary)',
+                      fontSize: '14px',
+                      fontWeight: '500'
+                    }}>
+                      Harga Maksimum
+                    </label>
+                    <span style={{
+                      color: 'var(--text-primary)',
+                      fontSize: '16px',
+                      fontWeight: '600',
+                      minWidth: '80px',
+                      textAlign: 'right'
+                    }}>
+                      ${priceRange[1].toFixed(2)}
+                    </span>
+                  </div>
+                  <input
+                    ref={maxSliderRef}
+                    type="range"
+                    min={priceRange[0]}
+                    max={maxPrice}
+                    step="0.01"
+                    value={priceRange[1]}
+                    onChange={(e) => {
+                      const val = parseFloat(e.target.value);
+                      if (val >= priceRange[0]) {
+                        setPriceRange([priceRange[0], val]);
+                      }
+                    }}
+                    style={{
+                      width: '100%',
+                      height: '6px',
+                      borderRadius: '3px',
+                      background: 'var(--bg-tertiary)',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      zIndex: priceRange[1] < priceRange[0] + 10 ? 1 : 0
+                    }}
+                  />
+                </div>
+              </div>
 
-          {/* Mobile Filter Sidebar */}
-          {isMobile && showFilter && <FilterSidebar />}
+              {/* Rating Filter */}
+              <div style={{ marginBottom: '24px' }}>
+                <label style={{
+                  display: 'block',
+                  color: 'var(--text-primary)',
+                  fontWeight: '600',
+                  marginBottom: '12px',
+                  fontSize: '16px'
+                }}>
+                  Rating Minimum
+                </label>
+                <div style={{
+                  display: 'flex',
+                  gap: '8px',
+                  justifyContent: 'center'
+                }}>
+                  {[1, 2, 3, 4, 5].map((starValue) => (
+                    <button
+                      key={starValue}
+                      type="button"
+                      onClick={() => {
+                        if (rating === starValue) {
+                          setRating(0);
+                        } else {
+                          setRating(starValue);
+                        }
+                      }}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: 'pointer',
+                        padding: '6px',
+                        borderRadius: '8px',
+                        transition: 'all 0.2s ease',
+                        outline: 'none'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'var(--bg-card-hover)';
+                        e.currentTarget.style.transform = 'scale(1.15)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }}
+                    >
+                      <FiStar
+                        style={{
+                          fontSize: '24px',
+                          color: starValue <= rating ? '#fbbf24' : 'var(--text-muted)',
+                          fill: starValue <= rating ? '#fbbf24' : 'transparent',
+                          strokeWidth: starValue <= rating ? 0 : 1.5,
+                          transition: 'all 0.2s ease',
+                          filter: starValue <= rating ? 'drop-shadow(0 2px 4px rgba(251, 191, 36, 0.4))' : 'none'
+                        }}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Reset Filter Button */}
+              {(category || rating > 0 || priceRange[0] !== minPrice || priceRange[1] !== maxPrice) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCategory('');
+                    setRating(0);
+                    setPriceRange([minPrice, maxPrice]);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    background: 'var(--bg-tertiary)',
+                    border: '1px solid var(--border-color)',
+                    borderRadius: '12px',
+                    color: 'var(--text-primary)',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = 'var(--bg-card-hover)';
+                    e.target.style.borderColor = 'var(--primary-color)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = 'var(--bg-tertiary)';
+                    e.target.style.borderColor = 'var(--border-color)';
+                  }}
+                >
+                  <FiX style={{ fontSize: '16px' }} />
+                  <span>Reset Filter</span>
+                </button>
+              )}
+            </div>
+          </div>
 
           {/* Products Grid */}
-          <div style={{ flex: 1 }}>
+          <div>
             {loading ? (
               <div style={{ textAlign: 'center', padding: '60px', color: 'var(--text-primary)' }}>
                 <div style={{
@@ -666,23 +630,17 @@ const Products = () => {
               </div>
             ) : products.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px' }}>
-                <p style={{ color: 'var(--text-muted)', fontSize: '18px' }}>
-                  Tidak ada produk ditemukan
-                </p>
-                <button
-                  onClick={resetFilters}
-                  className="btn btn-outline"
-                  style={{ marginTop: '20px' }}
-                >
-                  Reset Filter
-                </button>
+                <FiSearch style={{ fontSize: '64px', color: 'var(--text-muted)', marginBottom: '20px' }} />
+                <p style={{ color: 'var(--text-muted)', fontSize: '18px' }}>Tidak ada produk ditemukan</p>
               </div>
             ) : (
               <div style={{
                 display: 'grid',
-                gridTemplateColumns: isMobile
-                  ? '1fr'
-                  : 'repeat(auto-fill, minmax(280px, 1fr))',
+                gridTemplateColumns: isSmallMobile 
+                  ? '1fr' 
+                  : isMobile 
+                    ? 'repeat(auto-fill, minmax(200px, 1fr))' 
+                    : 'repeat(auto-fill, minmax(280px, 1fr))',
                 gap: isMobile ? '20px' : '30px'
               }}>
                 {products.map(product => (
@@ -698,3 +656,4 @@ const Products = () => {
 };
 
 export default Products;
+

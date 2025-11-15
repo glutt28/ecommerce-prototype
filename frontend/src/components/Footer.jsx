@@ -5,12 +5,13 @@ const Footer = () => {
 
   return (
     <footer style={{
-      background: 'var(--bg-secondary)',
-      borderTop: '1px solid var(--border-color)',
+      background: 'rgba(26, 31, 58, 0.9)',
+      borderTop: '1px solid rgba(255, 255, 255, 0.1)',
       color: 'var(--text-primary)',
       padding: isMobile ? '30px 15px' : '40px 20px',
       marginTop: isMobile ? '40px' : '60px',
-      backdropFilter: 'blur(20px)'
+      backdropFilter: 'blur(30px)',
+      boxShadow: '0 -8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
     }}>
       <div className="container" style={{
         display: 'grid',

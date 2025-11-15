@@ -18,12 +18,12 @@
   --text-muted: #94a3b8;
   --text-dark: #0f172a;
   
-  /* Background Colors */
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-tertiary: #334155;
-  --bg-card: #1e293b;
-  --bg-card-hover: #334155;
+  /* Background Colors - Modern Gradient Theme */
+  --bg-primary: #0a0e27;
+  --bg-secondary: #1a1f3a;
+  --bg-tertiary: #2a2f4a;
+  --bg-card: #1e2338;
+  --bg-card-hover: #2a2f4a;
   
   /* Border & Divider */
   --border-color: #334155;
@@ -53,13 +53,73 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: var(--text-primary);
-  background-color: var(--bg-primary);
-  background-image: 
-    radial-gradient(at 0% 0%, rgba(99, 102, 241, 0.1) 0px, transparent 50%),
-    radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.1) 0px, transparent 50%);
+  background: 
+    /* Base gradient */
+    linear-gradient(135deg, #0a0e27 0%, #1a1f3a 25%, #0f172a 50%, #1a1f3a 75%, #0a0e27 100%),
+    /* Animated radial gradients for depth */
+    radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 70%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.08) 0%, transparent 60%),
+    radial-gradient(circle at 0% 100%, rgba(99, 102, 241, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 100% 0%, rgba(139, 92, 246, 0.1) 0%, transparent 40%),
+    /* Subtle noise texture */
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.01) 0px,
+      transparent 1px,
+      transparent 2px,
+      rgba(255, 255, 255, 0.01) 3px
+    );
+  background-size: 
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    100% 100%,
+    4px 4px;
   background-attachment: fixed;
+  background-position: 
+    0% 0%,
+    0% 0%,
+    0% 0%,
+    0% 0%,
+    0% 0%,
+    0% 0%;
   line-height: 1.6;
   min-height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 30% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 70% 80%, rgba(139, 92, 246, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 50% 50%, rgba(236, 72, 153, 0.06) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+  animation: backgroundShift 20s ease-in-out infinite;
+  opacity: 0.8;
+}
+
+@keyframes backgroundShift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.8;
+  }
+  33% {
+    transform: translate(2%, 1%) scale(1.05);
+    opacity: 0.9;
+  }
+  66% {
+    transform: translate(-1%, 2%) scale(0.98);
+    opacity: 0.85;
+  }
 }
 
 code {
@@ -91,6 +151,12 @@ code {
   color: white;
   border: none;
   box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+  text-decoration: none;
+}
+
+.btn-primary a,
+a.btn-primary {
+  text-decoration: none;
 }
 
 .btn-primary:hover {
@@ -146,231 +212,6 @@ input::placeholder, textarea::placeholder {
 input[style*="backdrop-filter"]::placeholder {
   color: rgba(255, 255, 255, 0.7);
   opacity: 1;
-}
-
-/* Price Slider Styling - Separate Min and Max */
-.price-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  background: transparent;
-  cursor: pointer;
-  outline: none;
-  width: 100%;
-  height: 8px;
-  margin: 0;
-  padding: 0;
-}
-
-.price-slider:focus {
-  outline: none;
-}
-
-.price-slider::-webkit-slider-track {
-  background: var(--bg-tertiary);
-  height: 8px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.price-slider::-webkit-slider-runnable-track {
-  background: var(--bg-tertiary);
-  height: 8px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.price-slider-min::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  background: var(--primary-color);
-  border: 3px solid white;
-  border-radius: 50%;
-  cursor: grab;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.5), 0 0 0 4px rgba(99, 102, 241, 0.1);
-  transition: all 0.15s ease;
-  margin-top: -6px;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.price-slider-min::-webkit-slider-thumb:active {
-  cursor: grabbing !important;
-  transform: scale(1.2);
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.8), 0 0 0 6px rgba(99, 102, 241, 0.2);
-}
-
-.price-slider-min::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
-  box-shadow: 0 3px 12px rgba(99, 102, 241, 0.7), 0 0 0 5px rgba(99, 102, 241, 0.15);
-}
-
-.price-slider-max::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  background: var(--accent-color);
-  border: 3px solid white;
-  border-radius: 50%;
-  cursor: grab;
-  box-shadow: 0 2px 8px rgba(236, 72, 153, 0.5), 0 0 0 4px rgba(236, 72, 153, 0.1);
-  transition: all 0.15s ease;
-  margin-top: -6px;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.price-slider-max::-webkit-slider-thumb:active {
-  cursor: grabbing !important;
-  transform: scale(1.2);
-  box-shadow: 0 4px 16px rgba(236, 72, 153, 0.8), 0 0 0 6px rgba(236, 72, 153, 0.2);
-}
-
-.price-slider-max::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
-  box-shadow: 0 3px 12px rgba(236, 72, 153, 0.7), 0 0 0 5px rgba(236, 72, 153, 0.15);
-}
-
-.price-slider::-moz-range-track {
-  background: var(--bg-tertiary);
-  height: 8px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.price-slider-min::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  background: var(--primary-color);
-  border: 3px solid white;
-  border-radius: 50%;
-  cursor: grab;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.5), 0 0 0 4px rgba(99, 102, 241, 0.1);
-  transition: all 0.15s ease;
-  -moz-appearance: none;
-}
-
-.price-slider-min::-moz-range-thumb:active {
-  cursor: grabbing !important;
-  transform: scale(1.2);
-  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.8), 0 0 0 6px rgba(99, 102, 241, 0.2);
-}
-
-.price-slider-min::-moz-range-thumb:hover {
-  transform: scale(1.15);
-  box-shadow: 0 3px 12px rgba(99, 102, 241, 0.7), 0 0 0 5px rgba(99, 102, 241, 0.15);
-}
-
-.price-slider-max::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  background: var(--accent-color);
-  border: 3px solid white;
-  border-radius: 50%;
-  cursor: grab;
-  box-shadow: 0 2px 8px rgba(236, 72, 153, 0.5), 0 0 0 4px rgba(236, 72, 153, 0.1);
-  transition: all 0.15s ease;
-  -moz-appearance: none;
-}
-
-.price-slider-max::-moz-range-thumb:active {
-  cursor: grabbing !important;
-  transform: scale(1.2);
-  box-shadow: 0 4px 16px rgba(236, 72, 153, 0.8), 0 0 0 6px rgba(236, 72, 153, 0.2);
-}
-
-.price-slider-max::-moz-range-thumb:hover {
-  transform: scale(1.15);
-  box-shadow: 0 3px 12px rgba(236, 72, 153, 0.7), 0 0 0 5px rgba(236, 72, 153, 0.15);
-}
-
-.price-slider::-ms-track {
-  background: transparent;
-  border-color: transparent;
-  color: transparent;
-  height: 8px;
-  cursor: pointer;
-}
-
-.price-slider-min::-ms-thumb {
-  width: 20px;
-  height: 20px;
-  background: var(--primary-color);
-  border: 3px solid white;
-  border-radius: 50%;
-  cursor: grab;
-  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.5);
-}
-
-.price-slider-max::-ms-thumb {
-  width: 20px;
-  height: 20px;
-  background: var(--accent-color);
-  border: 3px solid white;
-  border-radius: 50%;
-  cursor: grab;
-  box-shadow: 0 2px 8px rgba(236, 72, 153, 0.5);
-}
-
-.price-slider::-ms-fill-lower {
-  background: var(--bg-tertiary);
-}
-
-.price-slider::-ms-fill-upper {
-  background: var(--bg-tertiary);
-}
-
-/* Hide number input spinners */
-input[type="number"]::-webkit-inner-spin-button,
-input[type="number"]::-webkit-outer-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-input[type="number"] {
-  -moz-appearance: textfield;
-}
-
-/* Explore Products Button Animation */
-.explore-products-btn {
-  animation: pulseGlow 2s ease-in-out infinite;
-  position: relative;
-}
-
-.explore-products-btn::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-  transition: left 0.5s ease;
-}
-
-.explore-products-btn:hover::before {
-  left: 100%;
-}
-
-.explore-products-btn:hover svg:last-child {
-  transform: translateX(4px);
-}
-
-@keyframes pulseGlow {
-  0%, 100% {
-    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.3), 0 0 0 0 rgba(99, 102, 241, 0.4);
-  }
-  50% {
-    box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4), 0 0 0 4px rgba(99, 102, 241, 0.2);
-  }
-}
-
-/* Radio Button Styling */
-input[type="radio"] {
-  width: 18px;
-  height: 18px;
-  cursor: pointer;
-  accent-color: var(--primary-color);
 }
 
 .card {
@@ -434,33 +275,18 @@ input[type="radio"] {
 @keyframes pulse {
   0%, 100% {
     opacity: 1;
-    transform: scale(1);
   }
   50% {
     opacity: 0.7;
-    transform: scale(1.05);
   }
 }
 
-@keyframes fadeInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-30px);
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 50%;
   }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes fadeInRight {
-  from {
-    opacity: 0;
-    transform: translateX(30px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
+  50% {
+    background-position: 100% 50%;
   }
 }
 
@@ -511,16 +337,10 @@ html {
 /* Link Hover Effects */
 a {
   transition: all 0.3s ease;
-  text-decoration: none;
 }
 
 a:hover {
   color: var(--primary-light) !important;
-}
-
-/* Remove underline from button links */
-a.btn, a.btn-primary, a.btn-secondary, a.btn-outline {
-  text-decoration: none !important;
 }
 
 /* Loading Animation */

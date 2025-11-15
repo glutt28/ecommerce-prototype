@@ -16,9 +16,15 @@ function App() {
     <AuthProvider>
       <CartProvider>
         <Router>
-          <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ 
+            minHeight: '100vh', 
+            display: 'flex', 
+            flexDirection: 'column',
+            position: 'relative',
+            zIndex: 1
+          }}>
             <Header />
-            <main style={{ flex: 1 }}>
+            <main style={{ flex: 1, position: 'relative', zIndex: 1 }}>
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/products" element={<Products />} />
