@@ -44,7 +44,7 @@ const Header = () => {
           color: 'var(--primary-color)',
           textDecoration: 'none'
         }}>
-          TokoWebMurah
+          TokoApaIni
         </Link>
 
         {/* Desktop Navigation */}
@@ -88,7 +88,7 @@ const Header = () => {
               <button onClick={logout} className="btn btn-outline" style={{ fontSize: '14px', padding: '8px 16px' }}>Logout</button>
             </>
           ) : (
-            <Link to="/login" className="btn btn-primary" style={{ fontSize: '14px', padding: '8px 16px' }}>Login</Link>
+            <Link to="/login" className="btn btn-primary" style={{ fontSize: '14px', padding: '8px 16px', textDecoration: 'none' }}>Login</Link>
           )}
         </nav>
 
@@ -172,7 +172,7 @@ const Header = () => {
               to="/login" 
               onClick={() => setMenuOpen(false)}
               className="btn btn-primary" 
-              style={{ width: '100%', marginTop: '10px', textAlign: 'center' }}
+              style={{ width: '100%', marginTop: '10px', textAlign: 'center', textDecoration: 'none' }}
             >
               Login
             </Link>

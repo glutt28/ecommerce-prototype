@@ -18,7 +18,7 @@ const Footer = () => {
         gap: isMobile ? '30px' : '40px'
       }}>
         <div>
-          <h3 style={{ marginBottom: isMobile ? '12px' : '16px', fontSize: isMobile ? '18px' : '20px' }}>TokoWebMurah</h3>
+          <h3 style={{ marginBottom: isMobile ? '12px' : '16px', fontSize: isMobile ? '18px' : '20px' }}>TokoApaIni</h3>
           <p style={{ color: 'var(--text-muted)', fontSize: isMobile ? '14px' : '16px' }}>
             Platform ecommerce terpercaya untuk kebutuhan Anda.
           </p>
@@ -33,12 +33,12 @@ const Footer = () => {
         </div>
         <div>
           <h4 style={{ marginBottom: isMobile ? '12px' : '16px', fontSize: isMobile ? '16px' : '18px', color: 'var(--text-primary)' }}>Contact</h4>
-          <p style={{ color: 'var(--text-muted)', fontSize: isMobile ? '14px' : '16px' }}>Email: info@tokowebmurah.com</p>
+          <p style={{ color: 'var(--text-muted)', fontSize: isMobile ? '14px' : '16px' }}>Email: info@tokoapaini.com</p>
           <p style={{ color: 'var(--text-muted)', fontSize: isMobile ? '14px' : '16px' }}>Phone: +62 XXX XXX XXX</p>
         </div>
       </div>
       <div style={{ textAlign: 'center', marginTop: isMobile ? '30px' : '40px', paddingTop: isMobile ? '15px' : '20px', borderTop: '1px solid var(--border-color)' }}>
-        <p style={{ color: 'var(--text-muted)', fontSize: isMobile ? '12px' : '14px' }}>&copy; 2024 TokoWebMurah. All rights reserved.</p>
+        <p style={{ color: 'var(--text-muted)', fontSize: isMobile ? '12px' : '14px' }}>&copy; 2024 TokoApaIni. All rights reserved.</p>
       </div>
     </footer>
   );

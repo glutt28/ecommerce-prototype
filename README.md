@@ -1,4 +1,4 @@
-# TokoWebMurah - MERN Ecommerce
+# TokoApaIni - MERN Ecommerce
 
 Website ecommerce dengan tech stack MERN (MongoDB, Express, React, Node.js).
 
@@ -23,7 +23,7 @@ Website ecommerce dengan tech stack MERN (MongoDB, Express, React, Node.js).
 ## Struktur Project
 
 ```
-tokowebmurah/
+tokoapaini/
 ├── backend/          # Express API Server
 │   ├── config/       # Database configuration
 │   ├── models/       # MongoDB models (User, Product, Order)
